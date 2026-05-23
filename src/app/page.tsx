@@ -3,25 +3,42 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Hammer, Sword, Zap, Github } from "lucide-react"
+import { Hammer, Sword, Zap, Github, Server } from "lucide-react"
 import { RankCard } from "@/components/shop/RankCard"
 import { PlayerAuth } from "@/components/shop/PlayerAuth"
 import { SloganGenerator } from "@/components/shop/SloganGenerator"
 import { DonorWall } from "@/components/shop/DonorWall"
 import { CheckoutDialog } from "@/components/shop/CheckoutDialog"
+import { fetchServerStatusAction } from "@/app/actions/exaroton-actions"
+import { type ExarotonServerStatus } from "@/lib/exaroton"
 
 export default function Home() {
   const [playerUsername, setPlayerUsername] = React.useState("")
   const [checkoutOpen, setCheckoutOpen] = React.useState(false)
+  const [serverStatus, setServerStatus] = React.useState<ExarotonServerStatus | null>(null)
+
+  React.useEffect(() => {
+    // Initialer Fetch
+    const getStatus = async () => {
+      const status = await fetchServerStatusAction()
+      setServerStatus(status)
+    }
+    getStatus()
+
+    // Alle 60 Sekunden aktualisieren
+    const interval = setInterval(getStatus, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handlePurchase = () => {
     if (!playerUsername) {
-      // Small visual nudge if they haven't validated
       document.getElementById('player-auth')?.scrollIntoView({ behavior: 'smooth' })
       return
     }
     setCheckoutOpen(true)
   }
+
+  const isServerOnline = serverStatus?.status === 1
 
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-primary selection:text-primary-foreground">
@@ -50,9 +67,9 @@ export default function Home() {
 
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full border border-white/5">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className={`w-2 h-2 rounded-full ${isServerOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                 <span className="text-xs font-bold uppercase tracking-widest text-foreground">
-                  128 Spieler Online
+                  {serverStatus ? `${serverStatus.players.count} Spieler Online` : 'Server Offline'}
                 </span>
               </div>
             </div>
@@ -76,30 +93,24 @@ export default function Home() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full text-primary text-xs font-bold uppercase tracking-[0.2em] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <Sword className="h-3 w-3" /> Offizieller Pure SMP Shop
+            <Server className="h-3 w-3" /> {serverStatus?.address || "EXAROTON SERVER"}
           </div>
           <h1 className="text-5xl lg:text-8xl font-headline font-bold tracking-tighter mb-6 leading-none animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
             SCHMIEDE DEIN<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[gradient_8s_linear_infinite]">SCHICKSAL.</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-muted-foreground mb-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            Erhebe dich über die Massen und sichere dir exklusive Vorteile auf dem Pure SMP Server. 
-            Jeder Kauf unterstützt unsere Community und die Weiterentwicklung neuer Features.
+            Erhebe dich über die Massen und sichere dir exklusive Vorteile auf dem {serverStatus?.name || "Pure SMP"} Server. 
           </p>
           <div className="flex flex-wrap justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
             <div className="flex items-center gap-2 text-sm">
               <Zap className="h-4 w-4 text-primary" />
-              <span>Sofortige Freischaltung</span>
+              <span>Echtzeit-Verbindung</span>
             </div>
             <div className="w-1 h-1 bg-muted rounded-full self-center"></div>
             <div className="flex items-center gap-2 text-sm">
               <Zap className="h-4 w-4 text-primary" />
-              <span>Lifetime Zugriff</span>
-            </div>
-            <div className="w-1 h-1 bg-muted rounded-full self-center"></div>
-            <div className="flex items-center gap-2 text-sm">
-              <Zap className="h-4 w-4 text-primary" />
-              <span>Sichere Bezahlung</span>
+              <span>Exaroton Cloud</span>
             </div>
           </div>
         </div>
@@ -108,45 +119,22 @@ export default function Home() {
       {/* Main Bento Grid */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column - Auth & AI & Wall */}
           <div className="lg:col-span-4 space-y-8 h-full flex flex-col">
             <div id="player-auth">
               <PlayerAuth onValidated={(user) => setPlayerUsername(user)} />
             </div>
-            
             <div className="flex-1">
               <DonorWall />
             </div>
-
             <SloganGenerator />
           </div>
-
-          {/* Right Column - The Pure Rank (Bento Style Emphasis) */}
           <div className="lg:col-span-8 h-full">
             <RankCard 
               onPurchase={handlePurchase} 
               disabled={false}
             />
           </div>
-
         </div>
-
-        {/* Community Info Section */}
-        <section className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 rounded-2xl bg-secondary/20 border border-white/5 hover:border-primary/20 transition-all text-center">
-            <h3 className="text-xl font-headline font-bold mb-4">Gemeinschaft</h3>
-            <p className="text-sm text-muted-foreground">Wir sind mehr als nur ein Server. Wir sind eine Familie von Entdeckern und Kriegern.</p>
-          </div>
-          <div className="p-8 rounded-2xl bg-secondary/20 border border-white/5 hover:border-primary/20 transition-all text-center">
-            <h3 className="text-xl font-headline font-bold mb-4">Innovation</h3>
-            <p className="text-sm text-muted-foreground">Eigene Plugins und Mechaniken, die du sonst nirgendwo finden wirst.</p>
-          </div>
-          <div className="p-8 rounded-2xl bg-secondary/20 border border-white/5 hover:border-primary/20 transition-all text-center">
-            <h3 className="text-xl font-headline font-bold mb-4">Support</h3>
-            <p className="text-sm text-muted-foreground">Unser Team steht dir rund um die Uhr zur Verfügung, falls Probleme auftreten.</p>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
@@ -158,26 +146,19 @@ export default function Home() {
                 PURE<span className="text-primary">FORGE</span>
               </span>
               <p className="text-[10px] text-muted-foreground max-w-xs text-center md:text-left uppercase tracking-widest leading-relaxed">
-                Wir stehen in keiner Verbindung zu Mojang AB oder Microsoft. Minecraft ist ein Markenzeichen von Mojang AB.
+                Server IP: {serverStatus?.address || "offline"}
               </p>
             </div>
-            
             <div className="flex gap-6">
               <a href="#" className="p-2 hover:text-primary transition-colors"><Github className="h-5 w-5" /></a>
-              {/* Other social icons could go here */}
             </div>
-
             <div className="text-xs text-muted-foreground flex flex-col md:flex-row gap-4 md:gap-8 items-center">
-              <a href="#" className="hover:text-foreground">Impressum</a>
-              <a href="#" className="hover:text-foreground">Datenschutz</a>
-              <a href="#" className="hover:text-foreground">AGB</a>
               <span className="opacity-50">© 2024 Pure SMP Server</span>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* Dialogs */}
       <CheckoutDialog 
         open={checkoutOpen} 
         onOpenChange={setCheckoutOpen} 
