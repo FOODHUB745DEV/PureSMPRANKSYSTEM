@@ -3,39 +3,79 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Hammer, Sword, Zap, Github, Server } from "lucide-react"
+import { Hammer, Sword, Zap, Github, Server, Beaker, Loader2 } from "lucide-react"
 import { RankCard } from "@/components/shop/RankCard"
 import { PlayerAuth } from "@/components/shop/PlayerAuth"
 import { SloganGenerator } from "@/components/shop/SloganGenerator"
 import { DonorWall } from "@/components/shop/DonorWall"
 import { CheckoutDialog } from "@/components/shop/CheckoutDialog"
-import { fetchServerStatusAction } from "@/app/actions/exaroton-actions"
+import { fetchServerStatusAction, grantRankAction } from "@/app/actions/exaroton-actions"
 import { type ExarotonServerStatus } from "@/lib/exaroton"
+import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 export default function Home() {
   const [playerUsername, setPlayerUsername] = React.useState("")
   const [checkoutOpen, setCheckoutOpen] = React.useState(false)
   const [serverStatus, setServerStatus] = React.useState<ExarotonServerStatus | null>(null)
+  const [isTestLoading, setIsTestLoading] = React.useState(false)
+  const { toast } = useToast()
 
   React.useEffect(() => {
-    // Initialer Fetch
     const getStatus = async () => {
       const status = await fetchServerStatusAction()
       setServerStatus(status)
     }
     getStatus()
 
-    // Alle 60 Sekunden aktualisieren
     const interval = setInterval(getStatus, 60000)
     return () => clearInterval(interval)
   }, [])
 
   const handlePurchase = () => {
     if (!playerUsername) {
+      toast({
+        title: "Username fehlt",
+        description: "Bitte gib zuerst deinen Minecraft-Namen ein.",
+        variant: "destructive"
+      })
       document.getElementById('player-auth')?.scrollIntoView({ behavior: 'smooth' })
       return
     }
     setCheckoutOpen(true)
+  }
+
+  const handleDevTestRank = async () => {
+    if (!playerUsername) {
+      toast({
+        title: "Test fehlgeschlagen",
+        description: "Gib erst einen Usernamen oben ein!",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsTestLoading(true)
+    try {
+      const success = await grantRankAction(playerUsername, "Pure")
+      if (success) {
+        toast({
+          title: "Test erfolgreich!",
+          description: `Befehl für ${playerUsername} wurde an Exaroton gesendet.`,
+        })
+      } else {
+        throw new Error("API Fehler")
+      }
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Test fehlgeschlagen",
+        description: "Prüfe die Server-Konsole oder API-Daten.",
+      })
+    } finally {
+      setIsTestLoading(false)
+    }
   }
 
   const isServerOnline = serverStatus?.status === 1
@@ -123,6 +163,35 @@ export default function Home() {
             <div id="player-auth">
               <PlayerAuth onValidated={(user) => setPlayerUsername(user)} />
             </div>
+            
+            {/* Dev Test Tool */}
+            <Card className="border-2 border-dashed border-primary/40 bg-primary/5">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Beaker className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm font-bold uppercase tracking-widest">Developer Tools</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                  onClick={handleDevTestRank}
+                  disabled={isTestLoading}
+                >
+                  {isTestLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Zap className="h-4 w-4 mr-2" />
+                  )}
+                  Rang Ingame vergeben (Test)
+                </Button>
+                <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                  Nutzt den Usernamen: {playerUsername || "Keiner gesetzt"}
+                </p>
+              </CardContent>
+            </Card>
+
             <div className="flex-1">
               <DonorWall />
             </div>
