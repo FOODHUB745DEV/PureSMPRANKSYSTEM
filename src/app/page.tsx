@@ -1,17 +1,14 @@
-
 "use client"
 
 import * as React from "react"
 import Image from "next/image"
-import { Hammer, Sword, Zap, Github, Server, Beaker, Loader2 } from "lucide-react"
+import { Hammer, Zap, Github, Beaker, Loader2 } from "lucide-react"
 import { RankCard } from "@/components/shop/RankCard"
 import { PlayerAuth } from "@/components/shop/PlayerAuth"
 import { SloganGenerator } from "@/components/shop/SloganGenerator"
 import { DonorWall } from "@/components/shop/DonorWall"
 import { CheckoutDialog } from "@/components/shop/CheckoutDialog"
-import { fetchServerStatusAction, grantRankAction } from "@/app/actions/exaroton-actions"
 import { createRankCodeAction } from "@/app/actions/rank-codes"
-import { type ExarotonServerStatus } from "@/lib/exaroton"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -19,20 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 export default function Home() {
   const [playerUsername, setPlayerUsername] = React.useState("")
   const [checkoutOpen, setCheckoutOpen] = React.useState(false)
-  const [serverStatus, setServerStatus] = React.useState<ExarotonServerStatus | null>(null)
   const [isTestLoading, setIsTestLoading] = React.useState(false)
   const { toast } = useToast()
-
-  React.useEffect(() => {
-    const getStatus = async () => {
-      const status = await fetchServerStatusAction()
-      setServerStatus(status)
-    }
-    getStatus()
-
-    const interval = setInterval(getStatus, 60000)
-    return () => clearInterval(interval)
-  }, [])
 
   const handlePurchase = () => {
     if (!playerUsername) {
@@ -62,36 +47,23 @@ export default function Home() {
 
     setIsTestLoading(true)
     try {
-      // 1. Grant rank on Exaroton
-      const serverSuccess = await grantRankAction(playerUsername, "Pure")
-      
-      // 2. Generate code in Firestore
+      // Generate code in Firestore
       const generatedCode = await createRankCodeAction(playerUsername, "Pure")
 
-      if (serverSuccess) {
-        toast({
-          title: "Test erfolgreich!",
-          description: `Befehl gesendet & Code generiert: ${generatedCode}`,
-        })
-      } else {
-        toast({
-          title: "Teilweise erfolgreich",
-          description: `Code generiert (${generatedCode}), aber Exaroton-Befehl fehlgeschlagen.`,
-          variant: "destructive"
-        })
-      }
+      toast({
+        title: "Test erfolgreich!",
+        description: `Aktivierungscode generiert: ${generatedCode}`,
+      })
     } catch (e) {
       toast({
         variant: "destructive",
         title: "Test fehlgeschlagen",
-        description: "Ein Fehler ist bei der Verarbeitung aufgetreten.",
+        description: "Ein Fehler ist bei der Code-Generierung aufgetreten.",
       })
     } finally {
       setIsTestLoading(false)
     }
   }
-
-  const isServerOnline = serverStatus?.status === 1
 
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-primary selection:text-primary-foreground">
@@ -119,10 +91,9 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full border border-white/5">
-                <div className={`w-2 h-2 rounded-full ${isServerOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+              <div className="hidden sm:flex items-center gap-2 bg-secondary/50 px-4 py-1.5 rounded-full border border-white/5">
                 <span className="text-xs font-bold uppercase tracking-widest text-foreground">
-                  {serverStatus ? `${serverStatus.players.count} Spieler Online` : 'Server Offline'}
+                  Shop Online
                 </span>
               </div>
             </div>
@@ -146,26 +117,15 @@ export default function Home() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full text-primary text-xs font-bold uppercase tracking-[0.2em] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <Server className="h-3 w-3" /> {serverStatus?.address || "EXAROTON SERVER"}
+            <Zap className="h-3 w-3" /> PURE SMP RANK SHOP
           </div>
           <h1 className="text-5xl lg:text-8xl font-headline font-bold tracking-tighter mb-6 leading-none animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
             SCHMIEDE DEIN<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[gradient_8s_linear_infinite]">SCHICKSAL.</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-muted-foreground mb-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            Erhebe dich über die Massen und sichere dir exklusive Vorteile auf dem {serverStatus?.name || "Pure SMP"} Server. 
+            Erhebe dich über die Massen und sichere dir exklusive Vorteile auf dem Pure SMP Server. Erhalte einen Code und löse ihn sofort ingame ein.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
-            <div className="flex items-center gap-2 text-sm">
-              <Zap className="h-4 w-4 text-primary" />
-              <span>Echtzeit-Verbindung</span>
-            </div>
-            <div className="w-1 h-1 bg-muted rounded-full self-center"></div>
-            <div className="flex items-center gap-2 text-sm">
-              <Zap className="h-4 w-4 text-primary" />
-              <span>Exaroton Cloud</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -197,7 +157,7 @@ export default function Home() {
                   ) : (
                     <Zap className="h-4 w-4 mr-2" />
                   )}
-                  Rang + Code testen
+                  Aktivierungscode testen
                 </Button>
                 <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
                   Username: {playerUsername || "Keiner gesetzt"}
@@ -228,7 +188,7 @@ export default function Home() {
                 PURE<span className="text-primary">FORGE</span>
               </span>
               <p className="text-[10px] text-muted-foreground max-w-xs text-center md:text-left uppercase tracking-widest leading-relaxed">
-                Server IP: {serverStatus?.address || "offline"}
+                Offizieller Shop für Pure SMP
               </p>
             </div>
             <div className="flex gap-6">
