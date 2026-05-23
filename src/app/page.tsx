@@ -3,23 +3,17 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Hammer, Zap, Github, Beaker, Loader2, Check, Copy, Ticket, ShieldCheck, X } from "lucide-react"
+import { Hammer, Zap, Github } from "lucide-react"
 import { RankCard } from "@/components/shop/RankCard"
 import { PlayerAuth } from "@/components/shop/PlayerAuth"
 import { SloganGenerator } from "@/components/shop/SloganGenerator"
 import { DonorWall } from "@/components/shop/DonorWall"
 import { CheckoutDialog } from "@/components/shop/CheckoutDialog"
-import { createRankCodeAction } from "@/app/actions/rank-codes"
 import { useToast } from "@/hooks/use-toast"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 export default function Home() {
   const [playerUsername, setPlayerUsername] = React.useState("")
   const [checkoutOpen, setCheckoutOpen] = React.useState(false)
-  const [isTestLoading, setIsTestLoading] = React.useState(false)
-  const [testResultCode, setTestResultCode] = React.useState<string | null>(null)
   const { toast } = useToast()
 
   const handlePurchase = () => {
@@ -36,43 +30,6 @@ export default function Home() {
       return
     }
     setCheckoutOpen(true)
-  }
-
-  const handleDevTestRank = async () => {
-    if (!playerUsername) {
-      toast({
-        title: "Test fehlgeschlagen",
-        description: "Gib erst einen Usernamen oben ein!",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setIsTestLoading(true)
-    try {
-      const generatedCode = await createRankCodeAction(playerUsername, "Pure")
-      setTestResultCode(generatedCode)
-      toast({
-        title: "Test erfolgreich!",
-        description: `Aktivierungscode generiert: ${generatedCode}`,
-      })
-    } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Test fehlgeschlagen",
-        description: "Ein Fehler ist bei der Code-Generierung aufgetreten.",
-      })
-    } finally {
-      setIsTestLoading(false)
-    }
-  }
-
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
-    toast({
-      title: "Kopiert!",
-      description: "Code in Zwischenablage gespeichert.",
-    })
   }
 
   return (
@@ -147,34 +104,6 @@ export default function Home() {
               <PlayerAuth onValidated={(user) => setPlayerUsername(user)} />
             </div>
             
-            {/* Dev Test Tool */}
-            <Card className="border-2 border-dashed border-primary/40 bg-primary/5">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Beaker className="h-4 w-4 text-primary" />
-                  <CardTitle className="text-sm font-bold uppercase tracking-widest">Developer Tools</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-primary/50 text-primary hover:bg-primary/10"
-                  onClick={handleDevTestRank}
-                  disabled={isTestLoading}
-                >
-                  {isTestLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Zap className="h-4 w-4 mr-2" />
-                  )}
-                  Aktivierungscode testen
-                </Button>
-                <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
-                  Username: {playerUsername || "Keiner gesetzt"}
-                </p>
-              </CardContent>
-            </Card>
-
             <div className="flex-1">
               <DonorWall />
             </div>
@@ -217,56 +146,6 @@ export default function Home() {
         onOpenChange={setCheckoutOpen} 
         username={playerUsername}
       />
-
-      {/* Test Result Dialog for big code display */}
-      <Dialog open={!!testResultCode} onOpenChange={(open) => !open && setTestResultCode(null)}>
-        <DialogContent className="sm:max-w-[500px] bg-card border-4 border-primary shadow-[0_0_50px_rgba(243,147,75,0.3)] p-0 overflow-hidden">
-          <div className="p-8 text-center space-y-8 animate-in zoom-in-95 duration-500">
-            <div className="mx-auto bg-green-500/10 w-20 h-20 rounded-full flex items-center justify-center border-4 border-green-500/30">
-              <Check className="h-10 w-10 text-green-500" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter uppercase">Test erfolgreich!</h2>
-              <p className="text-muted-foreground">Dein Test-Aktivierungscode:</p>
-            </div>
-            
-            <div className="bg-background border-4 border-primary rounded-2xl p-8 relative shadow-[0_0_30px_rgba(243,147,75,0.2)] group overflow-hidden">
-              <div className="absolute inset-0 bg-primary/5 animate-pulse"></div>
-              <Ticket className="absolute -top-4 -right-4 h-16 w-16 text-primary/10 -rotate-12" />
-              
-              <div className="relative z-10 space-y-4">
-                <span className="text-6xl md:text-7xl font-mono font-black tracking-[0.15em] text-primary drop-shadow-[0_0_15px_rgba(243,147,75,0.5)]">
-                  {testResultCode}
-                </span>
-                
-                <div className="pt-4">
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => testResultCode && copyCode(testResultCode)} 
-                    className="h-12 px-8 font-bold text-lg hover:bg-primary hover:text-primary-foreground transition-all group/btn"
-                  >
-                    <Copy className="mr-2 h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-                    CODE KOPIEREN
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-left text-sm space-y-4 bg-secondary/50 p-6 rounded-xl border border-border">
-              <div className="flex items-center gap-2 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-                <p className="font-bold uppercase tracking-wider">Entwickler-Info</p>
-              </div>
-              <p className="text-muted-foreground">Dieser Code wurde aus deiner <span className="text-foreground font-bold">codes.json</span> Liste gezogen und in Firestore als "benutzt" markiert.</p>
-            </div>
-
-            <Button variant="ghost" onClick={() => setTestResultCode(null)} className="w-full text-muted-foreground hover:text-foreground">
-              Test schließen
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
