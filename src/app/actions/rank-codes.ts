@@ -1,7 +1,6 @@
-
 'use client';
 
-import { collection, doc, setDoc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, getDocs, query, limit } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -9,36 +8,39 @@ import codesData from '@/lib/codes.json';
 
 /**
  * Holt einen verfügbaren Code aus der vordefinierten Liste.
+ * Ein Code gilt als verfügbar, wenn er noch NICHT in der 'rank_codes' Collection existiert.
  */
 async function getNextAvailableCode(): Promise<string> {
   const { firestore } = initializeFirebase();
   const codesCollection = collection(firestore, 'rank_codes');
   
-  // Alle bereits benutzten Codes abrufen
+  // Alle bereits zugewiesenen Codes abrufen
   const querySnapshot = await getDocs(codesCollection);
   const usedCodes = querySnapshot.docs.map(doc => doc.data().code);
   
-  // Verfügbare Codes filtern
+  // Verfügbare Codes aus der JSON-Liste filtern
   const availableCodes = codesData.codes.filter(c => !usedCodes.includes(c));
   
   if (availableCodes.length === 0) {
-    throw new Error('Keine Aktivierungscodes mehr verfügbar!');
+    throw new Error('KEINE CODES MEHR VERFÜGBAR! Bitte fülle die codes.json auf.');
   }
   
-  // Zufälligen Code aus den verfügbaren wählen
+  // Zufälligen Code aus den verbleibenden wählen
   const randomIndex = Math.floor(Math.random() * availableCodes.length);
   return availableCodes[randomIndex];
 }
 
 /**
- * Erstellt einen neuen Rang-Code in Firestore basierend auf der vordefinierten Liste.
+ * Erstellt einen neuen Rang-Code in Firestore.
+ * Der Code selbst wird als Dokument-ID verwendet, um Dubletten zu vermeiden.
  */
 export async function createRankCodeAction(username: string, rankId: string) {
   const { firestore } = initializeFirebase();
   
   try {
     const code = await getNextAvailableCode();
-    const codeRef = doc(collection(firestore, 'rank_codes'));
+    // Wir nutzen den Code als ID, um sicherzustellen, dass er nur einmal existieren kann
+    const codeRef = doc(firestore, 'rank_codes', code);
     
     const data = {
       code: code,
@@ -48,8 +50,7 @@ export async function createRankCodeAction(username: string, rankId: string) {
       createdAt: serverTimestamp()
     };
 
-    // Wir nutzen kein await hier gemäß Guidelines für Mutationen,
-    // fügen aber einen catch-Block für Sicherheitsregeln-Fehler hinzu.
+    // Optimistisches Update ohne await (gemäß Guidelines)
     setDoc(codeRef, data)
       .catch(async (err) => {
         const permissionError = new FirestorePermissionError({
