@@ -1,0 +1,43 @@
+
+{
+  "entities": {
+    "RankCode": {
+      "title": "Rank Activation Code",
+      "description": "A unique code generated after purchase to be redeemed in-game.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The unique 8-character activation code."
+        },
+        "username": {
+          "type": "string",
+          "description": "The Minecraft username of the purchaser."
+        },
+        "rankId": {
+          "type": "string",
+          "description": "The ID of the rank purchased (e.g., 'Pure')."
+        },
+        "used": {
+          "type": "boolean",
+          "description": "Whether the code has already been redeemed in-game."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the code was generated."
+        }
+      },
+      "required": ["code", "username", "rankId", "used", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  },
+  "firestore": {
+    "/rank_codes/{codeId}": {
+      "schema": "RankCode",
+      "description": "Collection of activation codes for ranks."
+    }
+  }
+}
