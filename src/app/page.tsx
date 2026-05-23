@@ -10,6 +10,7 @@ import { SloganGenerator } from "@/components/shop/SloganGenerator"
 import { DonorWall } from "@/components/shop/DonorWall"
 import { CheckoutDialog } from "@/components/shop/CheckoutDialog"
 import { fetchServerStatusAction, grantRankAction } from "@/app/actions/exaroton-actions"
+import { createRankCodeAction } from "@/app/actions/rank-codes"
 import { type ExarotonServerStatus } from "@/lib/exaroton"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -40,7 +41,10 @@ export default function Home() {
         description: "Bitte gib zuerst deinen Minecraft-Namen ein.",
         variant: "destructive"
       })
-      document.getElementById('player-auth')?.scrollIntoView({ behavior: 'smooth' })
+      const element = document.getElementById('player-auth')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
       return
     }
     setCheckoutOpen(true)
@@ -58,20 +62,29 @@ export default function Home() {
 
     setIsTestLoading(true)
     try {
-      const success = await grantRankAction(playerUsername, "Pure")
-      if (success) {
+      // 1. Grant rank on Exaroton
+      const serverSuccess = await grantRankAction(playerUsername, "Pure")
+      
+      // 2. Generate code in Firestore
+      const generatedCode = await createRankCodeAction(playerUsername, "Pure")
+
+      if (serverSuccess) {
         toast({
           title: "Test erfolgreich!",
-          description: `Befehl für ${playerUsername} wurde an Exaroton gesendet.`,
+          description: `Befehl gesendet & Code generiert: ${generatedCode}`,
         })
       } else {
-        throw new Error("API Fehler")
+        toast({
+          title: "Teilweise erfolgreich",
+          description: `Code generiert (${generatedCode}), aber Exaroton-Befehl fehlgeschlagen.`,
+          variant: "destructive"
+        })
       }
     } catch (e) {
       toast({
         variant: "destructive",
         title: "Test fehlgeschlagen",
-        description: "Prüfe die Server-Konsole oder API-Daten.",
+        description: "Ein Fehler ist bei der Verarbeitung aufgetreten.",
       })
     } finally {
       setIsTestLoading(false)
@@ -184,10 +197,10 @@ export default function Home() {
                   ) : (
                     <Zap className="h-4 w-4 mr-2" />
                   )}
-                  Rang Ingame vergeben (Test)
+                  Rang + Code testen
                 </Button>
                 <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
-                  Nutzt den Usernamen: {playerUsername || "Keiner gesetzt"}
+                  Username: {playerUsername || "Keiner gesetzt"}
                 </p>
               </CardContent>
             </Card>
