@@ -24,15 +24,17 @@ interface CheckoutDialogProps {
 
 export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogProps) {
   const [isProcessing, setIsProcessing] = React.useState(false)
-  const [hasPaid, setHasPaid] = React.useState(false)
   const [generatedCode, setGeneratedCode] = React.useState<string | null>(null)
   const { toast } = useToast()
+
+  const ROBLOX_GAME_URL = "https://www.roblox.com/de/games/137404764079367/PureSMP-Rang-Kauf-Center"
 
   const handleCheckout = async () => {
     setIsProcessing(true)
     
     try {
-      // Simulation der Validierung der Robux-Zahlung
+      // Simulation der Verifizierung (da wir keine API-Anbindung an Roblox-Käufe haben, 
+      // vertrauen wir hier auf die Bestätigung des Nutzers nach dem Spielbesuch)
       await new Promise(resolve => setTimeout(resolve, 3000))
 
       // Generiere Code in Firestore
@@ -40,14 +42,14 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
       setGeneratedCode(code)
 
       toast({
-        title: "Zahlung verifiziert!",
-        description: "Dein Aktivierungscode wurde generiert.",
+        title: "Vielen Dank!",
+        description: "Dein Aktivierungscode wurde erfolgreich geschmiedet.",
       })
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Fehler beim Checkout",
-        description: "Die Zahlung konnte nicht verifiziert werden.",
+        description: "Der Code konnte nicht generiert werden. Bitte versuche es erneut.",
       })
     } finally {
       setIsProcessing(false)
@@ -68,7 +70,6 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
     onOpenChange(false)
     setTimeout(() => {
       setGeneratedCode(null)
-      setHasPaid(false)
     }, 300)
   }
 
@@ -82,9 +83,9 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
             <DialogHeader>
               <div className="flex items-center gap-2 text-primary mb-2">
                 <Lock className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Robux-Transaktion</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">Roblox-Transaktion</span>
               </div>
-              <DialogTitle className="text-2xl font-headline">Zahlung mit Robux</DialogTitle>
+              <DialogTitle className="text-2xl font-headline">Zahlung im Kauf-Center</DialogTitle>
               <DialogDescription>
                 Account: <span className="text-foreground font-bold">{username}</span> • Produkt: <span className="text-primary font-bold">Pure Rang</span>
               </DialogDescription>
@@ -93,8 +94,8 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
             <div className="py-4 space-y-6">
               <div className="flex justify-between items-center bg-secondary/30 p-4 rounded-lg border border-border">
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold">Gesamtbetrag</span>
-                  <span className="text-xs text-muted-foreground italic">Roblox Gamepass / Dev Product</span>
+                  <span className="text-sm font-bold">Preis</span>
+                  <span className="text-xs text-muted-foreground italic">Zahlbar im Roblox Center</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Coins className="h-6 w-6 text-primary" />
@@ -103,17 +104,23 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
               </div>
 
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 space-y-3">
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">Schritt 1: Gamepass kaufen</p>
-                <p className="text-sm text-muted-foreground">Klicke auf den Button unten, um den Gamepass auf Roblox zu kaufen. Komme danach hierher zurück.</p>
-                <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10 gap-2">
-                  <ExternalLink className="h-4 w-4" />
-                  ZUM ROBLOX GAMEPASS
+                <p className="text-xs font-bold uppercase tracking-widest text-primary">Schritt 1: Im Center bezahlen</p>
+                <p className="text-sm text-muted-foreground">Besuche unser Roblox Kauf-Center und erwerbe dort den Rang. Kehre danach hierher zurück.</p>
+                <Button 
+                  asChild
+                  variant="outline" 
+                  className="w-full border-primary/50 text-primary hover:bg-primary/10 gap-2 h-12"
+                >
+                  <a href={ROBLOX_GAME_URL} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                    ZUM KAUF-CENTER (ROBLOX)
+                  </a>
                 </Button>
               </div>
 
               <div className="space-y-3">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center">Schritt 2: Bestätigen</p>
-                <p className="text-[10px] text-center text-muted-foreground italic">Klicke erst auf "Bestätigen", wenn du den Kauf auf Roblox abgeschlossen hast.</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center">Schritt 2: Code abholen</p>
+                <p className="text-[10px] text-center text-muted-foreground italic">Sobald du im Roblox Spiel bezahlt hast, klicke hier auf Bestätigen.</p>
               </div>
             </div>
 
@@ -126,11 +133,11 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Prüfe Zahlung...
+                    Generiere Code...
                   </>
                 ) : (
                   <>
-                    Kauf bestätigen & Code erhalten
+                    Zahlung erfolgt? Code anfordern
                     <ChevronRight className="ml-2 h-5 w-5" />
                   </>
                 )}
@@ -144,7 +151,7 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter uppercase">Zahlung bestätigt!</h2>
+              <h2 className="text-3xl font-headline font-bold tracking-tighter uppercase">Code erhalten!</h2>
               <p className="text-muted-foreground">Dein Aktivierungscode wurde geschmiedet:</p>
             </div>
             
