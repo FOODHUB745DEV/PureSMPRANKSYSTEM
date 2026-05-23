@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-minecraft",
+      "description": "Epic Minecraft landscape with a forge",
+      "imageUrl": "https://picsum.photos/seed/forge1/1200/600",
+      "imageHint": "minecraft landscape"
+    },
+    {
+      "id": "rank-pure-preview",
+      "description": "Visual representation of the Pure rank",
+      "imageUrl": "https://picsum.photos/seed/pure-rank/600/400",
+      "imageHint": "golden shield"
+    }
+  ]
+}
