@@ -32,7 +32,7 @@ export function RankCard({ onPurchase, disabled }: RankCardProps) {
         <div className="mx-auto bg-primary/20 w-20 h-20 rounded-full flex items-center justify-center mb-4 border-2 border-primary/50 shadow-[0_0_20px_rgba(243,147,75,0.2)]">
           <Flame className="h-10 w-10 text-primary animate-bounce" />
         </div>
-        <CardTitle className="text-4xl font-headline tracking-tighter">PURE RANG</CardTitle>
+        <CardTitle className="text-4xl font-headline tracking-tighter uppercase">Pure Rang</CardTitle>
         <CardDescription className="text-primary font-bold text-lg mt-2">
           Lebenslange Mitgliedschaft
         </CardDescription>

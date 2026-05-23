@@ -151,7 +151,7 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
           </Button>
           <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground opacity-60">
             <ShieldCheck className="h-3 w-3" />
-            100% Sicher • Exaroton API Integration aktiv
+            100% Sicher • Exaroton API Integration aktiv • Rang: Pure
           </div>
         </DialogFooter>
       </DialogContent>
