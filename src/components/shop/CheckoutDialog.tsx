@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { ShieldCheck, Lock, CreditCard, ChevronRight, Loader2, Check, Copy, Ticket } from "lucide-react"
+import { ShieldCheck, Lock, ChevronRight, Loader2, Check, Copy, Ticket, Coins, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -22,43 +22,32 @@ interface CheckoutDialogProps {
   username: string;
 }
 
-type PaymentMethod = "card" | "paypal" | null
-
 export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogProps) {
   const [isProcessing, setIsProcessing] = React.useState(false)
-  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>(null)
+  const [hasPaid, setHasPaid] = React.useState(false)
   const [generatedCode, setGeneratedCode] = React.useState<string | null>(null)
   const { toast } = useToast()
 
   const handleCheckout = async () => {
-    if (!paymentMethod) {
-      toast({
-        variant: "destructive",
-        title: "Zahlungsmethode fehlt",
-        description: "Bitte wähle PayPal oder Kreditkarte aus.",
-      })
-      return
-    }
-
     setIsProcessing(true)
     
     try {
-      // Simulation der Zahlungsabwicklung
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Simulation der Validierung der Robux-Zahlung
+      await new Promise(resolve => setTimeout(resolve, 3000))
 
       // Generiere Code in Firestore
       const code = await createRankCodeAction(username, "Pure")
       setGeneratedCode(code)
 
       toast({
-        title: "Kauf Erfolgreich!",
+        title: "Zahlung verifiziert!",
         description: "Dein Aktivierungscode wurde generiert.",
       })
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Fehler beim Checkout",
-        description: "Der Code konnte nicht generiert werden. Bitte kontaktiere den Support.",
+        description: "Die Zahlung konnte nicht verifiziert werden.",
       })
     } finally {
       setIsProcessing(false)
@@ -79,7 +68,7 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
     onOpenChange(false)
     setTimeout(() => {
       setGeneratedCode(null)
-      setPaymentMethod(null)
+      setHasPaid(false)
     }, 300)
   }
 
@@ -93,9 +82,9 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
             <DialogHeader>
               <div className="flex items-center gap-2 text-primary mb-2">
                 <Lock className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Sicherer Checkout (AES-256)</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">Robux-Transaktion</span>
               </div>
-              <DialogTitle className="text-2xl font-headline">Zahlung abschließen</DialogTitle>
+              <DialogTitle className="text-2xl font-headline">Zahlung mit Robux</DialogTitle>
               <DialogDescription>
                 Account: <span className="text-foreground font-bold">{username}</span> • Produkt: <span className="text-primary font-bold">Pure Rang</span>
               </DialogDescription>
@@ -105,44 +94,26 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
               <div className="flex justify-between items-center bg-secondary/30 p-4 rounded-lg border border-border">
                 <div className="flex flex-col">
                   <span className="text-sm font-bold">Gesamtbetrag</span>
-                  <span className="text-xs text-muted-foreground italic">Inkl. MwSt.</span>
+                  <span className="text-xs text-muted-foreground italic">Roblox Gamepass / Dev Product</span>
                 </div>
-                <span className="text-2xl font-headline font-bold text-primary">30,00€</span>
+                <div className="flex items-center gap-2">
+                  <Coins className="h-6 w-6 text-primary" />
+                  <span className="text-2xl font-headline font-bold text-primary">3.000</span>
+                </div>
+              </div>
+
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-widest text-primary">Schritt 1: Gamepass kaufen</p>
+                <p className="text-sm text-muted-foreground">Klicke auf den Button unten, um den Gamepass auf Roblox zu kaufen. Komme danach hierher zurück.</p>
+                <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10 gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  ZUM ROBLOX GAMEPASS
+                </Button>
               </div>
 
               <div className="space-y-3">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Wähle deine Zahlungsmethode</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => setPaymentMethod("card")}
-                    disabled={isProcessing}
-                    className={cn(
-                      "relative h-20 flex flex-col items-center justify-center gap-2 rounded-xl border-2 transition-all",
-                      paymentMethod === "card" 
-                        ? "border-primary bg-primary/5 shadow-[0_0_15px_rgba(243,147,75,0.2)]" 
-                        : "border-border/50 hover:border-primary/50 bg-secondary/20"
-                    )}
-                  >
-                    {paymentMethod === "card" && <div className="absolute top-1 right-1"><Check className="h-3 w-3 text-primary" /></div>}
-                    <CreditCard className={cn("h-6 w-6", paymentMethod === "card" ? "text-primary" : "text-muted-foreground")} />
-                    <span className="text-[10px] font-bold">Kreditkarte</span>
-                  </button>
-
-                  <button 
-                    onClick={() => setPaymentMethod("paypal")}
-                    disabled={isProcessing}
-                    className={cn(
-                      "relative h-20 flex flex-col items-center justify-center gap-2 rounded-xl border-2 transition-all",
-                      paymentMethod === "paypal" 
-                        ? "border-blue-500 bg-blue-500/5 shadow-[0_0_15px_rgba(59,130,246,0.2)]" 
-                        : "border-border/50 hover:border-blue-400/50 bg-secondary/20"
-                    )}
-                  >
-                    {paymentMethod === "paypal" && <div className="absolute top-1 right-1"><Check className="h-3 w-3 text-blue-500" /></div>}
-                    <div className="font-black text-blue-500 italic text-sm tracking-tighter">PayPal</div>
-                    <span className="text-[10px] font-bold">Instant Pay</span>
-                  </button>
-                </div>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center">Schritt 2: Bestätigen</p>
+                <p className="text-[10px] text-center text-muted-foreground italic">Klicke erst auf "Bestätigen", wenn du den Kauf auf Roblox abgeschlossen hast.</p>
               </div>
             </div>
 
@@ -150,16 +121,16 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
               <Button 
                 className="w-full h-12 bg-primary text-primary-foreground font-headline text-md hover:scale-[1.02] active:scale-95 transition-all shadow-lg" 
                 onClick={handleCheckout}
-                disabled={isProcessing || !paymentMethod}
+                disabled={isProcessing}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Verarbeite...
+                    Prüfe Zahlung...
                   </>
                 ) : (
                   <>
-                    Zahlungspflichtig bestellen
+                    Kauf bestätigen & Code erhalten
                     <ChevronRight className="ml-2 h-5 w-5" />
                   </>
                 )}
@@ -173,7 +144,7 @@ export function CheckoutDialog({ open, onOpenChange, username }: CheckoutDialogP
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter">ZAHLUNG ERFOLGREICH!</h2>
+              <h2 className="text-3xl font-headline font-bold tracking-tighter uppercase">Zahlung bestätigt!</h2>
               <p className="text-muted-foreground">Dein Aktivierungscode wurde geschmiedet:</p>
             </div>
             

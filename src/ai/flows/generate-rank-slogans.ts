@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file implements a Genkit flow to generate engaging sales slogans and announcements for a Minecraft server rank.
@@ -12,7 +13,7 @@ import { z } from 'genkit';
 
 const GenerateRankSlogansInputSchema = z.object({
   rankName: z.string().default('Pure').describe('The name of the Minecraft server rank.'),
-  price: z.string().default('30 Euro').describe('The price of the rank.'),
+  price: z.string().default('3000 Robux').describe('The price of the rank.'),
   benefits: z.string().describe('A detailed description of the in-game benefits and perks of the rank.'),
   targetAudience: z.string().default('Minecraft players looking for an enhanced experience and exclusive perks.').describe('The primary audience for the slogans.'),
   styleTone: z.string().default('epic, persuasive, and engaging').describe('The desired style and tone for the slogans (e.g., epic, funny, direct).'),

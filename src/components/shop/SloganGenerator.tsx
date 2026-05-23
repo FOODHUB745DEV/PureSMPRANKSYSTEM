@@ -18,7 +18,7 @@ export function SloganGenerator() {
     try {
       const result = await generateRankSlogans({
         rankName: "Pure",
-        price: "30,00 Euro",
+        price: "3.000 Robux",
         benefits: "Flugmodus, Enderchest-Zugriff, Goldener Name, Exklusive Kits, Schmiede-Boni",
         targetAudience: "Minecraft Spieler auf Pure SMP",
         styleTone: "episch, feurig, motivierend",

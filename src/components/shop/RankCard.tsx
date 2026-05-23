@@ -1,7 +1,7 @@
 
 "use client"
 
-import { Check, Flame, Star, Shield, Zap, Hammer } from "lucide-react"
+import { Check, Flame, Star, Shield, Zap, Hammer, Coins } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -55,8 +55,11 @@ export function RankCard({ onPurchase, disabled }: RankCardProps) {
 
       <CardFooter className="flex flex-col gap-4 p-8 bg-secondary/50 border-t border-border/50">
         <div className="text-center w-full">
-          <span className="text-4xl font-headline font-bold">30,00€</span>
-          <span className="text-muted-foreground text-sm block">Einmalige Zahlung</span>
+          <div className="flex items-center justify-center gap-2">
+            <Coins className="h-8 w-8 text-primary" />
+            <span className="text-4xl font-headline font-bold">3.000</span>
+          </div>
+          <span className="text-muted-foreground text-sm block">Robux • Einmalig</span>
         </div>
         <Button 
           onClick={onPurchase}
